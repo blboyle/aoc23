@@ -1,122 +1,189 @@
-require 'input.rb'
+require_relative './input.rb'
 
-class Day1
+class Day2
     def self.run 
-        @calibration_document = CalibrationDocument.new(Puzzle1)
-
-        part_1 
-        part_2 
+        # self.part_1
+        self.part_2
     end
 
-    def part_1
-        @calibration_document.sum_calibration_values
+    private
+
+    def self.part_1
+      play = Play.new(PuzzlaInput1)
     end
 
-    def part_1
-        @calibration_document.sum_calibration_values_with_letters
+    def self.part_2
+      play = Play.new(PuzzlaInput1)
+      p play.findSumOfProducts
     end
 end
 
-class CalibrationDocument
-  @@num_map = {
-    "one": "1",
-    "two": "2",
-    "three": "3",
-    "four": "4",
+class Play
 
-    
-    "five": "5",
-    "six": "6",
-    "seven": "7",
-    "eight": "8",
-    "nine": "9",
-  }
-  @@nums = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-  ]
-  @@numWords = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 
-  def initialize(input)
-    @input = input
-  end
- 
+  @@games = []
+  @@possible_games_sum = 0
 
-  def convert_to_lines
-    @input.split
-  end
+  def initialize input
+    @gamesProccessing = processInput input
 
-  def sum_calibration_values
-    total = 0
-
-    convert_to_lines.each do |line|
-      total = total + calculate_calibration_value(line)
+    @gamesProccessing.each do |game|
+      @@games.push(Game.new(game))
     end
-    total
+
+    @@games.each do |game|
+      if game.isPossible
+        @@possible_games_sum += game.id.to_i
+      end
+    end
+
   end
 
-  def sum_calibration_values_with_letters
-    total = 0
-
-    convert_to_lines.each do |line|
-      total = total + calculate_calibration_value_with_letters(line)
+  def findSumOfProducts
+    sum = 0
+    findProductOfFewest.each do |product|
+      sum += product
     end
-    total
+    sum
+  end
+
+  def findProductOfFewest
+    products = []
+    fewestPossibleColours.each do |arr|
+      products.push(arr[0] * arr[1] * arr[2])
+    end
+    products
+  end
+
+  def fewestPossibleColours
+    fewestColoursArray = []
+    @@games.each do |game|
+      fewestColoursArray.push(game.fewestPossibleColours)
+    end
+    fewestColoursArray
   end
 
   private
 
-  def calculate_calibration_value(line)
-    regex = /\d/
-    value = line.scan(regex)
-    [value[0], value[value.length - 1]].join.to_i
+  def processInput input
+    gameArray = []
+    input.split("\n", -1).each do |game|
+      gameSplit = game.split(":")
+
+      gameNumber = gameSplit[0].split(" ")[1]
+
+      currentGame = [gameNumber,{
+        "red"=> [],
+        "green"=> [],
+        "blue"=>[]
+      }]
+
+      plays = gameSplit[1].split(";")
+
+      plays.each do |play|
+        colours = play.split(", ")
+        
+        colours.each do |colour|
+          colourSplit = colour.split(" ")
+          amount = colourSplit[0]
+          colourName = colourSplit[1]
+
+          currentGame[1][colourName].push(amount)
+
+
+        end
+      end
+
+      gameArray.push(currentGame)
+
+    end
+    gameArray
   end
 
-  def calculate_calibration_value_with_letters(line)
-    newLine = line
-    results = []
-    lengthRemoved = 0
+end
 
-    while newLine.length > 1
-      @@nums.each do |num|
-        index = newLine.index(num)
+class Game
 
-        if index != nil
-          results.push([index.to_i + lengthRemoved, num])
-        end
-      end
+  @@max_red = 12
+  @@max_green = 13
+  @@max_blue = 14
 
-      @@numWords.each do |word|
-        index2 = newLine.index(word)
+  def initialize newGame
+    @id = newGame[0]
+    @reds = newGame[1]["red"]
+    @greens = newGame[1]["green"]
+    @blues = newGame[1]["blue"]
+  end
 
-        if index2 != nil
-          results.push([index2.to_i + lengthRemoved, word])
-        end
-      end
+  def id
+    @id
+  end
 
-      lengthRemoved = lengthRemoved + 1
+  def fewestPossibleColours
+    lowest_red = 0
+    lowest_green = 0
+    lowest_blue = 0 
 
-      newLine = newLine[1..-1]
-    end
-
-    sorted = results.sort_by { |a| a[0] }
-
-    all_numbers = sorted.map do |a|
-      if a[1].length === 1
-        a[1].to_i
-      else
-        @@num_map[a[1].to_sym].to_i
+    @reds.each do |red|
+      if red.to_i > lowest_red
+        lowest_red = red.to_i
       end
     end
 
-    [all_numbers[0], all_numbers[all_numbers.length - 1]].join.to_i
+    @blues.each do |blue|
+      if blue.to_i > lowest_blue
+        lowest_blue = blue.to_i
+      end
+    end
 
+
+    @greens.each do |green|
+      if green.to_i > lowest_green
+        lowest_green = green.to_i
+      end
+    end
+
+    [
+      lowest_red,
+      lowest_green,
+      lowest_blue,
+    ]
+  end
+
+  def isPossible 
+
+    possible = true
+
+    @reds.each do |red|
+
+      if red.to_i > @@max_red
+        possible = false
+      end
+    end
+
+    @greens.each do |green|
+      if green.to_i > @@max_green
+        possible = false
+      end
+    end
+
+    @blues.each do |blue|
+      if blue.to_i > @@max_blue
+        possible = false
+      end
+    end
+
+    possible
+
+  end
+
+end
+
+class SmallBag
+end
+
+class Cube
+  def initialize color
+    @colour = color
   end
 end
