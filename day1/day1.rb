@@ -1,53 +1,48 @@
-require 'input.rb'
+require_relative './input'
 
 class Day1
-    def self.run 
-        @calibration_document = CalibrationDocument.new(Puzzle1)
+  def initialize(input)
+    @calibration_document = CalibrationDocument.new(input)
+  end
 
-        part_1 
-        part_2 
-    end
+  def part_one
+    @calibration_document.sum_calibration_values
+  end
 
-    def part_1
-        @calibration_document.sum_calibration_values
-    end
-
-    def part_1
-        @calibration_document.sum_calibration_values_with_letters
-    end
+  def part_two
+    @calibration_document.sum_calibration_values_with_letters
+  end
 end
 
 class CalibrationDocument
-  @@num_map = {
-    "one": "1",
-    "two": "2",
-    "three": "3",
-    "four": "4",
+  NUM_MAP = {
+    "one": '1',
+    "two": '2',
+    "three": '3',
+    "four": '4',
 
-    
-    "five": "5",
-    "six": "6",
-    "seven": "7",
-    "eight": "8",
-    "nine": "9",
-  }
-  @@nums = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-  ]
-  @@numWords = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    "five": '5',
+    "six": '6',
+    "seven": '7',
+    "eight": '8',
+    "nine": '9'
+  }.freeze
+  NUMS = %w[
+    1
+    2
+    3
+    4
+    5
+    6
+    7
+    8
+    9
+  ].freeze
+  NUM_WORDS = %w[one two three four five six seven eight nine].freeze
 
   def initialize(input)
     @input = input
   end
- 
 
   def convert_to_lines
     @input.split
@@ -57,8 +52,9 @@ class CalibrationDocument
     total = 0
 
     convert_to_lines.each do |line|
-      total = total + calculate_calibration_value(line)
+      total += calculate_calibration_value(line)
     end
+
     total
   end
 
@@ -66,7 +62,7 @@ class CalibrationDocument
     total = 0
 
     convert_to_lines.each do |line|
-      total = total + calculate_calibration_value_with_letters(line)
+      total += calculate_calibration_value_with_letters(line)
     end
     total
   end
@@ -85,23 +81,19 @@ class CalibrationDocument
     lengthRemoved = 0
 
     while newLine.length > 1
-      @@nums.each do |num|
+      NUMS.each do |num|
         index = newLine.index(num)
 
-        if index != nil
-          results.push([index.to_i + lengthRemoved, num])
-        end
+        results.push([index.to_i + lengthRemoved, num]) unless index.nil?
       end
 
-      @@numWords.each do |word|
+      NUM_WORDS.each do |word|
         index2 = newLine.index(word)
 
-        if index2 != nil
-          results.push([index2.to_i + lengthRemoved, word])
-        end
+        results.push([index2.to_i + lengthRemoved, word]) unless index2.nil?
       end
 
-      lengthRemoved = lengthRemoved + 1
+      lengthRemoved += 1
 
       newLine = newLine[1..-1]
     end
@@ -112,11 +104,10 @@ class CalibrationDocument
       if a[1].length === 1
         a[1].to_i
       else
-        @@num_map[a[1].to_sym].to_i
+        NUM_MAP[a[1].to_sym].to_i
       end
     end
 
-    [all_numbers[0], all_numbers[all_numbers.length - 1]].join.to_i
-
+    [all_numbers[0], all_numbers[- 1]].join.to_i
   end
 end
