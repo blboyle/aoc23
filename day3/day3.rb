@@ -1,30 +1,27 @@
 require_relative './input'
 
 class Day3
-  def self.run
-    # @schematic = EngineSchematic.new(PuzzleExample1)
-    @schematic = EngineSchematic.new(PuzzleInput1)
-    # part_1
-    part_2
+  def initialize(input)
+    @schematic = EngineSchematic.new(input)
   end
 
-  def self.part_1
+  def part_one
     part_numbers = @schematic.part_numbers
 
     total = 0
     part_numbers.each do |num|
       total += num.to_i
     end
-    p total
+    total
   end
 
-  def self.part_2
+  def part_two
     ratios = @schematic.find_gear_ratios
     total = 0
     ratios.each do |ratio|
       total += ratio
     end
-    p total
+    total
   end
 end
 

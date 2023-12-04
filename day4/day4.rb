@@ -1,19 +1,16 @@
 require_relative './input'
 
 class Day4
-  def self.run
-    @table = Table.new(PuzzleInput1)
-    # @table = Table.new(PuzzleExample1)
-    # part_1
-    part_2
+  def initialize(input)
+    @table = Table.new(input)
   end
 
-  def self.part_1
-    p @table.count_all_points
+  def part_one
+    @table.count_all_points
   end
 
-  def self.part_2
-    p @table.count_total_matching_cards
+  def part_two
+    @table.count_total_matching_cards
   end
 end
 
@@ -27,8 +24,6 @@ class Table
     @cards.each do |card|
       @card_count[card.id] = 0
     end
-
-    # p @card_count
   end
 
   def count_all_points
@@ -43,26 +38,17 @@ class Table
     @total = 0
 
     @cards.each do |card|
-      # p "--original card #{card.id}"
-      count_matching_cards(card, 0) # if card.id == 1
-      # p "total #{total}"
+      count_matching_cards(card, 0)
     end
     @total
-    # p @cardCount
   end
 
-  def count_matching_cards(card, parent)
+  def count_matching_cards(card, _parent)
     id = card.id
     card_index = id - 1
 
-    # buffer = ''
-    # parent.times do
-    #   buffer += '- - '
-    # end
-
     @card_count[id] += 1
 
-    p "parent #{parent}: id: #{id} :  matches #{card.number_of_matches}"
     @total += 1
 
     return unless card.number_of_matches.positive?
@@ -71,9 +57,6 @@ class Table
       card_index += 1
       count_matching_cards(@cards[card_index], id) if @cards[card_index]
     end
-
-    # p "#{buffer}new_total: #{new_total}"
-    # new_total
   end
 end
 
