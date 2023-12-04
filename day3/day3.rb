@@ -1,40 +1,43 @@
-require_relative './input.rb'
+require_relative './input'
 
 class Day3
-    def self.run 
-        self.part_1
-        # self.part_2
+  def self.run
+    # @schematic = EngineSchematic.new(PuzzleExample1)
+    @schematic = EngineSchematic.new(PuzzleInput1)
+    # part_1
+    part_2
+  end
+
+  def self.part_1
+    part_numbers = @schematic.part_numbers
+
+    total = 0
+    part_numbers.each do |num|
+      total += num.to_i
     end
+    p total
+  end
 
-    private
-
-    def self.part_1
-      schematic = EngineSchematic.new(PuzzleExample1)
-      part_numbers = schematic.part_numbers
-      
-
-      total = 0
-      part_numbers.each do |num|
-        total = total + num.to_i
-      end
-
+  def self.part_2
+    ratios = @schematic.find_gear_ratios
+    total = 0
+    ratios.each do |ratio|
+      total += ratio
     end
-
-    def self.part_2
-    end
+    p total
+  end
 end
 
 class EngineSchematic
+  @@numberStrings = %w[1 2 3 4 5 6 7 8 9 0]
 
-  @@numberStrings = ["1","2","3","4","5","6","7","8","9","0"]
-
-  def initialize input
+  def initialize(input)
     @schematic = input.strip.split("\n").map do |line|
-      line.split("")
+      line.split('')
     end
   end
 
-  def part_numbers 
+  def part_numbers
     maybe_part_numbers = []
     x_max = @schematic[0].length - 1
     y_max = @schematic.length - 1
@@ -44,63 +47,100 @@ class EngineSchematic
     current_number = []
 
     symbols = get_symbols
+    part_numbers = []
 
     symbols.each do |symbol|
+      parts = find_symbol_parts(symbol)
+      parts.each do |part|
+        alreadyIn = false
 
-      symbol_x = symbol[1][0]
-      symbol_y = symbol[1][1]
+        part_numbers.each do |part_number|
+          alreadyIn = true if part_number[0][0] == part[0][0] && part_number[0][1] == part[0][1]
+        end
 
-      p symbol_x
-      p symbol_y
-
-
+        part_numbers.push(part) unless alreadyIn
+      end
     end
 
-    # while y <= y_max  
+    part_numbers.map do |part_number|
+      part_number[1]
+    end
+  end
 
-    #   while x <= x_max  
+  def find_gear_ratios
+    gears = find_gears
+    gear_ratios = []
 
-    #     curr = @schematic[y][x]
-      
-    #     if curr != "."
+    gears.each do |gear|
+      parts = find_symbol_parts(gear)
+      gear_ratio = parts[0][1].to_i * parts[1][1].to_i
+      gear_ratios.push(gear_ratio)
+    end
+    gear_ratios
+  end
 
-    #       if @@numberStrings.include? curr 
-    #         current_number.push(curr)
-    #       end 
+  def find_gears
+    symbols = get_symbols
+    gears = []
 
-    #     else
+    possible_gears = symbols.select do |symbol|
+      symbol[0] == '*'
+    end
 
-    #       if current_number.length > 0
-    #         maybe_part_numbers.push(current_number)
-    #       end
+    possible_gears.each do |possible_gear|
+      parts = find_symbol_parts(possible_gear)
+      gears.push(possible_gear) if parts.length == 2
+    end
 
-    #       current_number = []
-          
-    #     end
+    gears
+  end
 
-    #     x+=1
+  def find_symbol_parts(symbol)
+    parts = []
+    # p '---'
+    # p symbol[1]
+    [-1, 0, 1].each do |y_change|
+      [-1, 0, 1].each do |x_change|
+        y = symbol[1][1] - y_change
+        x = symbol[1][0] - x_change
 
-    #   end
+        next if x == symbol[1][0] && y == symbol[1][1]
+        next unless @@numberStrings.include?(@schematic[y][x])
 
-    #   y+=1
-    #   x=0
+        # p "x:#{x} y:#{y} #{@schematic[y][x]}"
 
-    #   if current_number.length > 0
-    #     maybe_part_numbers.push(current_number)
-    #   end
-     
-    #   current_number = []
- 
-    # end
+        newPart = complete_number(x, y)
 
-    part_numbers = []
-    
-    []
+        alreadyIn = false
 
+        parts.each do |part|
+          alreadyIn = true if part[0][0] == newPart[0][0] && part[0][1] == newPart[0][1]
+        end
+
+        parts.push(newPart) unless alreadyIn
+      end
+    end
+    parts
+  end
+
+  def complete_number(x, y)
+    number = @schematic[y][x]
+    rightX = x + 1
+    leftX = x - 1
+    while rightX < @schematic[y].length && @@numberStrings.include?(@schematic[y][rightX])
+      number += @schematic[y][rightX]
+      rightX += 1
+    end
+
+    while leftX >= 0 && @@numberStrings.include?(@schematic[y][leftX])
+      number = @schematic[y][leftX] + number
+      leftX -= 1
+    end
+
+    [[leftX, y], number]
   end
 
   def get_symbols
-
     x_max = @schematic[0].length - 1
     y_max = @schematic.length - 1
     x = 0
@@ -108,35 +148,30 @@ class EngineSchematic
 
     symbols = []
 
-    while y <= y_max  
+    while y <= y_max
 
-      while x <= x_max  
+      while x <= x_max
 
         curr = @schematic[y][x]
-     
-        if curr != "."
 
-          if !@@numberStrings.include? curr 
-            symbols.push([curr, [x,y]])
-         
-          end
-          
-        end
+        symbols.push([curr, [x, y]]) if curr != '.' && !(@@numberStrings.include? curr)
 
-        x+=1
+        x += 1
 
       end
 
-      y+=1
-      x=0
- 
+      y += 1
+      x = 0
+
     end
 
     symbols
-
   end
-
 end
 
+# too high
 # not 10322555
 # not 9660531
+
+# too low
+# not 326901
