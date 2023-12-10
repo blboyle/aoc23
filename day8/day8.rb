@@ -15,28 +15,26 @@ class Day8
 end
 
 class DesertNavigation
-
-  def initialize input
+  def initialize(input)
     @instructions = input.split("\n\n")[0].strip
     @map = {}
 
     input.split("\n\n")[1].strip.split("\n").each do |node|
-      first = node.split(" = ")[0]
-      last = /\((\w+), (\w+)\)/.match(node.split(" = ")[1])
+      first = node.split(' = ')[0]
+      last = /\((\w+), (\w+)\)/.match(node.split(' = ')[1])
       @map[first] = {
-        "L" => last[1],
-        "R" => last[2]
+        'L' => last[1],
+        'R' => last[2]
       }
     end
   end
 
   def count_steps_to_end
-
-    location = "AAA"
+    location = 'AAA'
     steps = 0
     index = 0
 
-    while location != "ZZZ"
+    until location == 'ZZZ'
       side = @instructions[index]
 
       steps += 1
@@ -52,53 +50,49 @@ class DesertNavigation
     end
 
     steps
-
   end
 
   def count_ghost_steps
-
     steps = 0
+    index = 0
+
+    @tracking = {}
 
     starting_nodes = @map.keys.filter { |key| /\w\wA/.match(key) }
 
-    current_nodes = starting_nodes
+    @side_index = 0
 
-    while !at_end(current_nodes)
-      current_nodes = navigate current_nodes
+    check_next(starting_nodes, steps)
+  end
+
+  def check_next(nodes, steps)
+    return steps if at_end(nodes)
+
+    steps += 1
+    p steps
+
+    side = @instructions[@side_index]
+
+    new_nodes = [
+      @map[nodes[0]][side],
+      @map[nodes[1]][side]
+    ]
+    p new_nodes
+
+    if @side_index == @instructions.length - 1
+      @side_index = 0
+    else
+      @side_index += 1
     end
 
+    p @side_index
 
-
-    # location = "AAA"
-    # steps = 0
-    # index = 0
-
-    # while location != "ZZZ"
-    #   side = @instructions[index]
-
-    #   steps += 1
-
-    #   newLocation = @map[location][side]
-
-
-    #   location = newLocation
-    # end
-
-    steps
-
+    check_next(new_nodes, steps)
   end
 
-  def navigate(nodes)
-    ["12Z", "42Z"]
-  end
-
-  def at_end nodes
-
+  def at_end(nodes)
     nodes.all? do |node|
-      p node
       /\w\wZ/.match(node)
     end
-
   end
-
 end
