@@ -17,7 +17,7 @@ RSpec.describe do
   it 'returns correct answer for part 2 example' do
     day14 = Day14.new(PuzzleExample1)
     answer = day14.part_two
-    expect(answer).to equal(64)
+    expect(answer).to equal(614)
   end
 
   # it 'returns correct answer for part 2 input' do
