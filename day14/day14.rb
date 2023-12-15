@@ -19,34 +19,90 @@ class PositionsNote
     @platform = input.split("\n").reject { |row| row.length.zero? }.map do |row|
       row.split('')
     end
-    puts print_platform
-    puts "\n"
+    @tracker = []
+    # puts print_platform
+    # puts "\n"
   end
 
   def total_load
-    p "total load"
     titled_board = tilt_board @platform, 'N'
     count_load titled_board
   end
 
-  def total_load_after_cycle(max_count = 3)
-    p "total load after cycle"
-    puts "\n"
-    board = @platform.map(&:clone)
+  def store_board_in_tracker(board)
+    @tracker.push board.map(&:join).join("\n")
+  end
 
-    directions = %w[N W S E]
+  def total_load_after_cycle(max_count = 1_000_000_000)
+    board = @platform.map(&:clone)
 
     count = 0
 
+    repeats_at = nil
+    repeat_index = nil
+
+    store_board_in_tracker(board)
+
     while count < max_count
-      p "count: #{count} max_count"
-      direction_index = count % 4
-      board = tilt_board board, directions[direction_index]
+      # p "count #{count}" if count % 1_000_000 == 0
+      # p "count: #{count} max_count"
+      board = tilt_board board, 'N'
+      # puts "\n"
+      # puts print_platform board
+      # puts "\n"
+      board = tilt_board board, 'W'
+      # puts "\n"
+      # puts print_platform board
+      # puts "\n"
+      board = tilt_board board, 'S'
+      # puts "\n"
+      # puts print_platform board
+      # puts "\n"
+      board = tilt_board board, 'E'
+
+      # p "count #{count} load #{count_load board}"
+
+      if @tracker.include? board.map(&:join).join("\n")
+        # p board.map(&:join).join("\n")
+        # p @tracker.length
+        repeats_at = count
+        repeat_index = @tracker.find_index board.map(&:join).join("\n")
+        p repeat_index
+        p "count #{count} in here!"
+        # puts "\n#{board.map(&:join).join("\n")}"
+        # p count_load board
+        # puts "\n"
+        break
+      end
+
+      store_board_in_tracker(board)
+      # puts "\n"
+      # puts print_platform board
+      # puts "\n"
       count += 1
     end
 
-    count_load board
-    64
+    # p "repeats_at #{repeats_at}"
+    # (repeat_index / count)
+
+    # board_number = repeat_index + mod
+
+    # count 5 is the board I want.
+    # count 9 is the same as count 2  = 7
+
+    repeats_every = repeats_at - repeat_index
+    mod = (max_count - repeat_index + 1) % repeats_every
+    board_number = repeat_index + mod + 1
+
+    p "repeats_every #{repeats_every}"
+    p "mod #{mod}"
+    p "board_number #{board_number}"
+
+    new_board = @tracker[board_number].split("\n").map do |row|
+      row.split('')
+    end
+    count_load new_board
+    # 64
   end
 
   private
@@ -64,30 +120,21 @@ class PositionsNote
   end
 
   def tilt_board(board = @platform, direction)
-    puts "\n"
-    p "tilt board #{direction}"
+    # puts "\n"
+    # p "tilt board #{direction}"
 
-    row_change = 0
-    col_change = 0
+    return tilt_board_north board if direction == 'N'
+    return tilt_board_south board if direction == 'S'
+    return tilt_board_east board if direction == 'E'
 
-    row_change = -1 if direction == 'N'
+    tilt_board_west board if direction == 'W'
+  end
 
-    col_change = -1 if direction == 'W'
-
-    row_change = 1 if direction == 'S'
-
-    col_change = 1 if direction == 'E'
-
+  def tilt_board_north(board)
     new_board = []
 
-    board.each_with_index do |row, y|
-      new_row = []
-      row.each_with_index do |cell, x|
-        new_row.push []
-      end
-      new_board.push new_row
-    end
-
+    row_change = -1
+    col_change = 0
     board.each_with_index do |row, y|
       row.each_with_index do |cell, x|
         # p "x y #{x} #{y}"
@@ -98,51 +145,17 @@ class PositionsNote
         # puts "\n"
         # p "row #{y} col #{x} cell #{cell}"
 
-
         inner_y = y.clone
         inner_x = x.clone
-
 
         # p "check #{new_board[inner_y][x]}"
         # p "#{inner_y > 0} && #{new_board[inner_y - 1][x] != '#'} && #{new_board[inner_y - 1][x] != 'O'}"
 
-        if direction == "N"
-          # p "moving north"
-          while inner_y > 0 && new_board[inner_y + row_change][x] != '#' && new_board[inner_y + row_change][x] != 'O'
-            inner_y += row_change
-            inner_x += col_change
-            # p "y #{inner_y} x #{inner_x}"
-          end
-        end
-
-        if direction == "W"
-          while inner_x > 0 && new_board[y][inner_x + col_change] != '#' && new_board[y][inner_x + col_change] != 'O'
-            inner_y += row_change
-            inner_x += col_change
-            # p "y #{inner_y} x #{inner_x}"
-          end
-        end
-
-        if direction == "S"
-          # p "s"
-          # p "inner_y #{inner_y} < #{board.length} #{inner_y < board.length}"
-          # p "&& #{new_board[inner_y][inner_x] != '#'}"
-          # p "&& #{new_board[inner_y][inner_x] != 'O'}"
-          while inner_y < board.length && new_board[inner_y][inner_x] != '#' && new_board[inner_y][inner_x] != 'O'
-            # p "hi"
-            inner_y += row_change
-            inner_x += col_change
-            # p "y #{inner_y} x #{inner_x}"
-          end
-        end
-
-        if direction == "E"
-
-          while inner_x < board[0].length && new_board[y][inner_x + col_change] != '#' && new_board[y][inner_x + col_change] != 'O'
-            inner_y -= row_change
-            inner_x -= col_change
-            # p "y #{inner_y} x #{inner_x}"
-          end
+        # p "moving north"
+        while inner_y > 0 && new_board[inner_y + row_change][x] != '#' && new_board[inner_y + row_change][x] != 'O'
+          inner_y += row_change
+          inner_x += col_change
+          # p "y #{inner_y} x #{inner_x}"
         end
 
         new_board[inner_y] = [] unless new_board[inner_y]
@@ -154,13 +167,116 @@ class PositionsNote
       end
     end
 
-    puts "\n"
-    puts print_platform new_board
-    puts "\n"
+    new_board
+  end
+
+  def tilt_board_west(board)
+    new_board = []
+    row_change = 0
+    col_change = -1
+    board.each_with_index do |row, y|
+      row.each_with_index do |cell, x|
+        new_board[y] = [] unless new_board[y]
+        new_board[y][x] = cell if cell != 'O'
+        next if cell != 'O'
+
+        inner_x = x.clone
+
+        while inner_x > 0 && new_board[y][inner_x + col_change] != '#' && new_board[y][inner_x + col_change] != 'O'
+          inner_x += col_change
+        end
+
+        new_board[y] = [] unless new_board[y]
+
+        new_board[y][inner_x] = 'O'
+
+        new_board[y][x] = '.' if inner_x < x
+      end
+    end
+
+    new_board
+  end
+
+  def tilt_board_south(board)
+    # p 'tilting board south'
+    board = flip_vertical board
+    board = tilt_board_north board
+    flip_vertical(board)
+  end
+
+  def tilt_board_east(board)
+    # p 'tilting board east'
+    board = flip_horizontal board
+    board = tilt_board_west board
+    flip_horizontal(board)
+  end
+
+  def flip_vertical(board)
+    new_board = []
+
+    y = board.length
+    x = 0
+
+    while y > 0
+
+      y -= 1
+
+      new_row = []
+
+      x = 0
+
+      while x < board[0].length
+
+        new_row.push board[y][x]
+
+        x += 1
+      end
+
+      new_board.push new_row
+
+    end
+
+    new_board
+  end
+
+  def flip_horizontal(board)
+    # p 'flipping h'
+    new_board = []
+
+    y = 0
+
+    while y < board.length
+      # p "y #{y}"
+      # p "length #{board.length}"
+
+      new_row = []
+
+      x = board[0].length - 1
+
+      while x >= 0
+
+        # p "x #{x}"
+        # p "b #{board[y][x]}"
+
+        new_row.push board[y][x]
+
+        x -= 1
+      end
+
+      # p "new_row #{new_row}"
+
+      new_board.push new_row
+
+      y += 1
+
+    end
+
+    # p "new board #{new_board}"
+
     new_board
   end
 
   def print_platform(input = @platform)
-    input.map(&:join).join("\n")
+    input.map { |row| row.join(' ') }.join("\n\n")
   end
 end
