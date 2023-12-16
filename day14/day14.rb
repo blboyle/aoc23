@@ -20,6 +20,7 @@ class PositionsNote
       row.split('')
     end
     @tracker = []
+    @cycle = []
     # puts print_platform
     # puts "\n"
   end
@@ -33,17 +34,25 @@ class PositionsNote
     @tracker.push board.map(&:join).join("\n")
   end
 
-  def total_load_after_cycle(max_count = 1_000_000_000)
+  def store_board_in_winner(board)
+    @cycle.push board.map(&:join).join("\n")
+  end
+
+  def total_load_after_cycle(max_count_one_based = 1_000_000_000)
     board = @platform.map(&:clone)
 
     count = 0
 
-    repeats_at = nil
-    repeat_index = nil
+    repeats_at_zero_based = nil
+    repeat_index_zero_based = nil
 
-    store_board_in_tracker(board)
+    p "begin #{count_load(board)}"
+    tally = 0
 
-    while count < max_count
+    # store_board_in_tracker(board)
+
+    while count <= max_count_one_based
+      puts "\ncount: #{count}"
       # p "count #{count}" if count % 1_000_000 == 0
       # p "count: #{count} max_count"
       board = tilt_board board, 'N'
@@ -61,18 +70,40 @@ class PositionsNote
       board = tilt_board board, 'E'
 
       # p "count #{count} load #{count_load board}"
+      # print_tracker
 
+      p count_load board
       if @tracker.include? board.map(&:join).join("\n")
         # p board.map(&:join).join("\n")
-        # p @tracker.length
-        repeats_at = count
-        repeat_index = @tracker.find_index board.map(&:join).join("\n")
-        p repeat_index
-        p "count #{count} in here!"
+        repeats_at_zero_based = count if repeats_at_zero_based.nil?
+        if repeat_index_zero_based.nil?
+          repeat_index_zero_based = @tracker.find_index board.map(&:join).join("\n")
+        end
+
+        if @cycle.include? board.map(&:join).join("\n")
+          puts "\n\n"
+          idx = @cycle.find_index board.map(&:join).join("\n")
+          p "count #{count} idx #{idx}"
+          puts "\n\n"
+          break
+        end
+
+        store_board_in_winner board
+
+        p "count: #{count}"
+        p 'tracker:'
+        p @tracker.find_index board.map(&:join).join("\n")
+
+        # p "count #{count} in here!"
         # puts "\n#{board.map(&:join).join("\n")}"
-        # p count_load board
+
         # puts "\n"
-        break
+
+        # mod = repeat_index % repeats_every
+        # p "mod #{mod}"
+        # tally += 1
+        # break
+        # if tally > 50
       end
 
       store_board_in_tracker(board)
@@ -90,22 +121,63 @@ class PositionsNote
     # count 5 is the board I want.
     # count 9 is the same as count 2  = 7
 
-    repeats_every = repeats_at - repeat_index
-    mod = (max_count - repeat_index + 1) % repeats_every
-    board_number = repeat_index + mod + 1
+    puts "\n"
+    puts "\n"
 
-    p "repeats_every #{repeats_every}"
-    p "mod #{mod}"
-    p "board_number #{board_number}"
+    p "max_count_one_based #{max_count_one_based}"
+    p "repeats_at_zero_based #{repeats_at_zero_based} - repeat_index_zero_based #{repeat_index_zero_based}"
+    cycle = repeats_at_zero_based - repeat_index_zero_based
+    # p "-----repeat_every #{repeat_every}"
+    # board_number = ((max_count - repeat_index) % repeat_every) + repeat_index - 1
+    # p "mod #{mod}"
+    # p "board_number #{board_number}"
 
-    new_board = @tracker[board_number].split("\n").map do |row|
+    # new_board = @tracker[board_number].split("\n").map do |row|
+    #   row.split('')
+    # end
+    # p count_load new_board
+
+    # repeats_at
+    # max_count
+    # starting_board_index
+
+    # board_tracker_index = max_count_one_based
+
+    # (5), 12, 19, 26, 33, 40, 47
+
+    # count_load new_board
+    # board_tracker_index
+
+    board_index = (max_count_one_based % cycle) - repeat_index_zero_based + 1
+
+    # p @cycle
+    p board_index
+    board = @tracker[board_index].split("\n").map do |row|
       row.split('')
     end
-    count_load new_board
-    # 64
+
+    # p board
+
+    puts "max_count #{max_count_one_based} % cycle #{cycle} = #{max_count_one_based % cycle}"
+    # count_load @tracker[board_index]
+    count_load(board)
   end
 
   private
+
+  def print_tracker
+    @tracker.each_with_index do |item, _i|
+      # puts "\n"
+      new_item = item.split("\n").reject { |item| item.length == 0 }.map do |row|
+        row.split('')
+      end
+
+      # p new_item
+
+      # p "i #{i} #{count_load(new_item)}"
+      0
+    end
+  end
 
   def count_load(board)
     count = 0
