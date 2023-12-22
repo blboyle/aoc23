@@ -66,8 +66,7 @@ class GardenMap
   DIRECTIONS = %w[N S E W]
 
   def next_step(location, step, infinite = false)
-    # p "next_step() #{location} #{step}/#{@max_step}"
-
+    max = 50
     path = []
     depth = ''
     step.times do
@@ -76,6 +75,8 @@ class GardenMap
 
     # p "returning as step <= max_step #{step}" unless step <= @max_step
     return unless step <= @max_step
+
+    p "next_step() #{location} #{step}/#{@max_step}" if step % max == 0
 
     # puts "\n"
 
@@ -115,11 +116,59 @@ class GardenMap
 
     mod_x = location[1] % @map_dimensions[1]
     mod_y = location[0] % @map_dimensions[0]
+    # multiplier_x = location[1] / @map_dimensions[1]
+    # multiplier_y = location[0] / @map_dimensions[0]
 
     key = "#{location.join('-')}-#{step}"
 
-    # p 'returning tracker' if @tracking[key]
+    # p '-------------------------------------^^^^^'
     return @tracking[key] if @tracking[key]
+
+    mod_key = "#{[mod_y, mod_x].join('-')}-#{step}"
+
+    # p 'returning tracker' if @tracking[key]
+
+    if @tracking[mod_key]
+
+      # puts "\n\n"
+
+      # p location
+      difference_x = location[1] - mod_x
+      difference_y = location[0] - mod_y
+
+      # p difference_x
+      # p difference_y
+
+      # p "mod_key #{mod_key}: #{@tracking[mod_key]}"
+
+      # p "mod_x #{mod_x}"
+      # p "mod_y #{mod_y}"
+      # p "multiplier_x #{multiplier_x}"
+      # p "multiplier_y #{multiplier_y}"
+      # p "---------#{@tracking[mod_key]}"
+      # p @map_dimensions
+
+      if @tracking[mod_key]
+        new_key_path = @tracking[mod_key].map do |item|
+          p = item.scan(/(-?\d+)-(-?\d+)/)
+          y = p[0][0].to_i
+          x = p[0][1].to_i
+
+          # p "x #{x} #{difference_x} #{x + difference_x}"
+          # p "y #{y} #{difference_y} #{y + difference_y}"
+          [
+            y + difference_y,
+            x + difference_x
+          ].join('-')
+        end
+
+        # p "----key #{key}: #{@tracking[key]}"
+        p "returning new_key_path ----- #{new_key_path.length}" if step % max == 0
+        @tracking[key] = new_key_path.uniq
+        return new_key_path
+      end
+
+    end
 
     step += 1
 
