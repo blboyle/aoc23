@@ -5,21 +5,19 @@ class Day21
     @garden = GardenMap.new(input)
   end
 
-  def part_one steps
-    # p "one"
+  def part_one(steps)
     @garden.find_all_tiles steps
   end
 
-
-  def part_two
+  def part_two(steps)
+    @garden.find_all_tiles steps, true
   end
 end
 
-
 class GardenMap
-  def initialize input
-    map = input.split("\n").reject{|item| item == ""}.map do |row|
-      row.split("")
+  def initialize(input)
+    map = input.split("\n").reject { |item| item == '' }.map do |row|
+      row.split('')
     end
 
     height = map.length
@@ -31,50 +29,52 @@ class GardenMap
     @tracking = {}
 
     make_rock_locations map
-
   end
 
-  def find_all_tiles steps
+  def find_all_tiles(steps, infinite = false)
     # puts "\n\n"
     count = 0
 
     location = @starting
-    # @max_step = steps - 1
+    @max_step = steps
 
-    test_steps = 2
+    # test_steps = 3
 
-    @max_step = test_steps - 1
+    # @max_step = test_steps - 1
     # @max_step =
 
-    next_step(location, 0)
+    path = next_step(location, 0, infinite)
+
+    # p path.uniq.sort
+
+    path.uniq.length
 
     # p "hi"
     # p @found_tiles
 
-    @found_tiles.keys.each do |key|
-      # p @found_tiles[key]
-      count += @found_tiles[key].length
-    end
+    # @found_tiles.keys.each do |key|
+    #   # p @found_tiles[key]
+    #   count += @found_tiles[key].length
+    # end
 
-    p @tracking
-
-    count
+    # puts "\n"
+    # p @tracking
   end
 
   private
 
-DIRECTIONS = ["N","S","E","W"]
+  DIRECTIONS = %w[N S E W]
 
-  def next_step(location, step)
-
-    p "next step #{location} #{step}/#{@max_step}"
+  def next_step(location, step, infinite = false)
+    # p "next_step() #{location} #{step}/#{@max_step}"
 
     path = []
-    depth = ""
+    depth = ''
     step.times do
-      depth += "---"
+      depth += '---'
     end
 
+    # p "returning as step <= max_step #{step}" unless step <= @max_step
     return unless step <= @max_step
 
     # puts "\n"
@@ -85,75 +85,92 @@ DIRECTIONS = ["N","S","E","W"]
     @found_tiles[location[0]] ||= []
     @found_tiles[location[0]].delete(location[1])
 
+    x = location[1]
+    y = location[0]
+    h = @map_dimensions[0]
+    w = @map_dimensions[1]
 
-    north = location[0] - 1 >= 0 ? [location[0]- 1, location[1]] : nil
-    south = location[0] + 1 < @map_dimensions[0] ? [location[0]+ 1, location[1]] :  nil
-    east = location[1] + 1 < @map_dimensions[1] ? [location[0], location[1]+ 1] : nil
-    west = location[1] - 1 >= 0 ? [location[0], location[1]- 1] : nil
+    north = nil
+    south = nil
+    east = nil
+    west = nil
+
+    if infinite
+      north = [y - 1, x]
+      south = [y + 1, x]
+      east = [y, x + 1]
+      west = [y, x - 1]
+    else
+      north = y - 1 >= 0 ? [y - 1, x] : nil
+      south = y + 1 < h ? [y + 1, x] : nil
+      east = x + 1 < w ? [y, x + 1] : nil
+      west = x - 1 >= 0 ? [y, x - 1] : nil
+    end
 
     # p "#{location} n#{north} e#{east} s#{south} w#{west}"
 
-    step += 1
+    # p 'returning location' if step == @max_step
 
+    return [location.join('-')] if step == @max_step
 
-    p 'returning location' if step == @max_step
-    return location if step == @max_step
+    mod_x = location[1] % @map_dimensions[1]
+    mod_y = location[0] % @map_dimensions[0]
 
-    key = "#{location.join("-")}-#{step}"
+    key = "#{location.join('-')}-#{step}"
 
-    p 'returning tracker'  if @tracking[key]
+    # p 'returning tracker' if @tracking[key]
     return @tracking[key] if @tracking[key]
 
-    [north,south,east,west].each_with_index do |direction, i|
+    step += 1
 
+    [north, south, east, west].each_with_index do |direction, _i|
       next unless direction
-#
-      # p "direction #{direction}"
 
-      is_rock = @rock_locations[direction[0]] && @rock_locations[direction[0]].include?(direction[1])
-      is_tile = @found_tiles[direction[0]] && @found_tiles[direction[0]].include?(direction[1])
+      mod_x = direction[1] % @map_dimensions[1]
+      mod_y = direction[0] % @map_dimensions[0]
 
-      unless is_rock
-        unless is_tile
-          @found_tiles[direction[0]] ||= []
-          @found_tiles[direction[0]].push direction[1]
-        end
-        # p @found_tiles
-        path.push next_step(direction, step) if step <= @max_step
+      # p "direction #{DIRECTIONS[i]} #{direction}"
+
+      is_rock = @rock_locations[mod_y]&.include?(mod_x)
+      is_tile = @found_tiles[direction[0]]&.include?(direction[1])
+
+      next if is_rock
+
+      unless is_tile
+        @found_tiles[direction[0]] ||= []
+        @found_tiles[direction[0]].push direction[1]
       end
-
+      # p @found_tiles
+      path += next_step(direction, step, infinite) if step <= @max_step
     end
 
-    p "adding path to tracker #{path}"
-    @tracking[key] = path
+    # p "adding path to tracker path length: #{path.length}"
 
-    path
+    @tracking[key] = path.uniq
 
+    path.uniq
   end
 
-  def find_starting map
+  def find_starting(map)
     start = []
     map.each_with_index do |row, i|
       row.each_with_index do |cell, j|
-        if cell == "S"
-          start = [i, j]
-        end
+        start = [i, j] if cell == 'S'
       end
     end
     start
   end
 
-  def make_rock_locations map
+  def make_rock_locations(map)
     @rock_locations = {}
 
     map.each_with_index do |row, i|
-      row.each_with_index do |cell,j|
-        if cell == "#"
+      row.each_with_index do |cell, j|
+        if cell == '#'
           @rock_locations[i] ||= []
           @rock_locations[i].push j
         end
       end
     end
-
   end
 end
