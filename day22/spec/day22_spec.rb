@@ -2,11 +2,11 @@ require_relative '../day22'
 require_relative '../input'
 
 RSpec.describe do
-  # it 'returns correct answer for part 1 example' do
-  #   day22 = Day22.new(PuzzleExample1)
-  #   answer = day22.part_one 6
-  #   expect(answer).to equal(16)
-  # end
+  it 'returns correct answer for part 1 example' do
+    day22 = Day22.new(PuzzleExample1)
+    answer = day22.part_one
+    expect(answer).to equal(16)
+  end
 
   # it 'returns correct answer for part 1 example' do
   #   day22 = Day22.new(PuzzleInput1)
@@ -34,13 +34,13 @@ RSpec.describe do
   #   expect(answer).to equal(1594)
   # end
 
-  it 'returns correct answer for part 2 example' do
-    day22 = Day22.new(PuzzleExample1)
-    p 'before'
-    answer = day22.part_two 100
-    p 'after'
-    expect(answer).to equal(6536)
-  end
+  # it 'returns correct answer for part 2 example' do
+  #   day22 = Day22.new(PuzzleExample1)
+  #   p 'before'
+  #   answer = day22.part_two 100
+  #   p 'after'
+  #   expect(answer).to equal(6536)
+  # end
 
   # it 'returns correct answer for part 2 example' do
   #   day22 = Day22.new(PuzzleExample1)
